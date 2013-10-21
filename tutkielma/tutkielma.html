@@ -1,0 +1,128 @@
+<html>
+<head>
+
+<script src="http://cdn.leafletjs.com/leaflet-0.6.4/leaflet.js"></script>
+<script src="http://code.jquery.com/jquery-1.10.2.min.js"></script>
+<script src="leaflet_icons.js" type="text/javascript"></script>
+
+<link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.6.4/leaflet.css" />
+
+ <link href="bootstrap.min.css" rel="stylesheet" media="screen">
+ <link href="bootstrap.css" rel="stylesheet" media="screen">
+ <link href="leaflet-icon.css" rel="stylesheet" media="screen">
+
+
+ <!--[if lte IE 8]>
+     <link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.6.4/leaflet.ie.css" />
+ <![endif]-->
+
+</head>
+
+<body>
+
+<div style="height:685px;width:180px;padding:10px;margin-right:20px;float:left;background:rgb(70,140,200);border-radius:5px;">
+<button class="btn btn-default" id="add_marker">Way options </button>
+<div id="way_options" style="display:none;">
+   <input type="radio" name="way" value="street" id="street">Street<br>
+   <input type="radio" name="way" value="river">River<br>
+</div>
+
+
+Tuplaklikkaa uuden kaupungin luomiseksi. Vaylan luomiseksi klikkaa alkumarkkeria ja loppumarkkeria.  
+</div>
+
+<div id="map" style="height:500px;width:371px;background:red;">
+
+<img src="msomalia.gif" style="width:371px;height:500px;"> </img>
+</div>
+
+<div style="height:20px;padding:20px;">Aikajana</div>
+
+</body>
+
+
+<head>
+
+<script>
+
+$( document ).ready(function() {
+
+
+var map = L.map('map').setView([51.5, -0.09], 13);
+//map.dragging = false;
+map.dragging.disable();
+map.touchZoom.disable();
+map.doubleClickZoom.disable();
+map.scrollWheelZoom = false;
+map.minZoom = 9000;
+map.maxZoom = 9000;
+
+
+$( ".leaflet-control-container" ).remove();
+
+$( "#add_marker" ).click(function() {
+	$( "#way_options").slideToggle();
+});
+
+var way_option = "street";
+$('input:radio[name=way]').val(['street']);
+
+$('input:radio[name=way]').change(function() {
+  way_option = $('input[name="way"]:checked').val();
+  $( "#way_options").slideUp();
+});
+
+markers = new Array();
+
+function onMapClick(e) {
+    var marker = L.marker(e.latlng, options={"title" : "123"}).addTo(map);
+
+    marker.on('click', onMarkerClick);
+    marker.markerZoomAnimation = false;
+}
+
+
+function onMarkerClick(a) {
+  if(markers.length == 0){
+     markers.push(a.latlng);   
+  } else {
+    markers.push(a.latlng);
+    var street = new L.Polyline(markers, {
+    color: 'black',
+    weight: 3,
+    opacity: 0.8,
+    smoothFactor: 1
+
+    });
+    var river = new L.Polyline(markers, {
+    color: 'blue',
+    weight: 3,
+    opacity: 0.8,
+    smoothFactor: 1
+
+    });
+
+    if(way_option == 'street') {
+    	street.addTo(map);
+    } else if(way_option == 'river') {
+    	river.addTo(map);
+    } else {
+    	alert("Et ole valinnut vaylan tyyppia.");
+    }
+    markers = new Array();
+  }
+};
+
+map.on('dblclick', onMapClick);
+
+var redMarker = L.AwesomeMarkers.icon({
+icon: 'coffee', 
+color: 'red'
+})
+
+});
+
+</script>
+
+</head>
+</html>
