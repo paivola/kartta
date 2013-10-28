@@ -49,6 +49,7 @@
 		<div id="slider-range-max"></div>
 		
 	</div>
+	<button id = "test">TEST</button> <!-- POISTA!-->
 
 </body>
 
@@ -60,7 +61,9 @@
 $( document ).ready(function() {
 
 var towns = [];
-var modMarker;
+var id = 1;
+var popup = false;
+var polylines = [];
 
 var map = L.map('map').setView([51.5, -0.09], 13);
 //map.dragging = false;
@@ -89,20 +92,36 @@ $('input:radio[name=way]').change(function() {
 markers = new Array();
 
 function onMapClick(e) {
-    var marker = L.marker(e.latlng, options={"title" : towns.length+1}).addTo(map);
+	var latlng = e.latlng
+    var marker = L.marker(latlng, options={"title" : id}).addTo(map);
     marker.on('click', onMarkerClick);
 	marker.addEventListener( 'dblclick', onMarkerdblClick);
     marker.markerZoomAnimation = false;
 	
-	var town = {marker:marker, name:towns.length+1}
+	var town = {"marker":marker, "id":id, "latlng":latlng, "rivers":[], "streets":[]}; // rivers and streets' members towns
+	id+=1;
 	towns.push(town);
+	
 }
-
-
+var town1;
+var town2;
 function onMarkerClick(a) {
-  if(markers.length == 0){
+	
+	
+	if(popup){
+		popup = false;
+		redrawMarkers();
+	}
+	if(getTownIndexByMarker(this) == undefined){
+		console.log("uli");
+	}
+	else if(markers.length == 0){
+	 town1 = towns[getTownIndexByMarker(this)];
      markers.push(a.latlng);   
-  } else {
+	}
+	
+	else {
+	town2 = towns[getTownIndexByMarker(this)];
     markers.push(a.latlng);
     var street = new L.Polyline(markers, {
     color: 'black',
@@ -118,11 +137,23 @@ function onMarkerClick(a) {
     smoothFactor: 1
 
     });
+	
+	
+	
 
     if(way_option == 'street') {
     	street.addTo(map);
+		console.log("town1: "+ town1);
+		console.log("town2: "+town2);
+		addStreet(town1, town2);
+		polylines.push(street);
+		
     } else if(way_option == 'river') {
     	river.addTo(map);
+		console.log("town1: "+ town1);
+		console.log("town2: "+town2);
+		addRiver(town1, town2);
+		polylines.push(river);
     } else {
     	alert("Et ole valinnut vaylan tyyppia.");
     }
@@ -132,14 +163,21 @@ function onMarkerClick(a) {
 
 
 function onMarkerdblClick(a){
-	console.log(a);
-	modMarker = this;
+	var modMarker = this;
 	this.bindPopup("<b>Delete?</b><br/><button class='deleteButton'>Yes</button>").openPopup();
+	popup = true;
 	$(".deleteButton").click( function(){
-		var name = modMarker.name;
-		map.removeLayer(modMarker);
-		console.log(name);
+		var townindex = -3;
+		townindex = getTownIndexByMarker(modMarker);
+		
+		console.log(townindex);
+		map.removeLayer(towns[townindex].marker);
+		removeTown(townindex);
+		markers = new Array();
+		updateMap();
+	
     });
+
 	
 }
 
@@ -149,6 +187,127 @@ var redMarker = L.AwesomeMarkers.icon({
 icon: 'coffee', 
 color: 'red'
 });
+
+
+function removeMarkers(){
+	for(var i in towns){
+		 map.removeLayer(towns[i].marker);
+	}
+}
+function redrawMarkers(){
+	removeMarkers();
+	for(var i in towns){
+		var marker = L.marker(towns[i].latlng, options={"title" : towns[i].id}).addTo(map);
+		marker.on('click', onMarkerClick);
+		marker.addEventListener( 'dblclick', onMarkerdblClick);
+		marker.markerZoomAnimation = false;
+		towns[i].marker = marker;
+	}
+}
+function redrawConnections(){ // now all the Connections are drawed twice
+	for(var i in polylines){
+		map.removeLayer( polylines[i] );
+	}
+	polylines = [];
+	
+	for(var i in towns){
+		for(var j in towns[i].rivers){
+			var town1 = towns[i];
+			var town2 = towns[i].rivers[j];
+			drawRiver(town1, town2);
+		}
+		for(var j in towns[i].streets){
+			var town1 = towns[i];
+			var town2 = towns[i].streets[j];
+			drawStreet(town1, town2);
+		}
+	}
+}
+
+
+function updateMap(){
+	redrawMarkers();
+	redrawConnections();
+}
+
+function getTownIndexByMarker(marker){
+	for(var i in towns){
+		if(towns[i].marker == marker){
+			return i;
+		}
+	}
+}
+function getTownIndexByLatlng(latlng){
+	for(var i in towns){
+		if(towns[i].latlng == latlng){
+			return i;
+		}
+	}
+}
+function addRiver(town1, town2){
+	town1.rivers.push(town2);
+	town2.rivers.push(town1);
+}
+function drawRiver(town1, town2){
+	var list = new Array();
+	list.push(town1.latlng);
+	list.push(town2.latlng);
+	var river = new L.Polyline(list, {
+		color: 'blue',
+		weight: 3,
+		opacity: 0.8,
+		smoothFactor: 1
+
+		});
+	river.addTo(map);
+	polylines.push(river);
+}
+function drawStreet(town1, town2){
+	var list = new Array();
+	list.push(town1.latlng);
+	list.push(town2.latlng);
+	var street = new L.Polyline(list, {
+		color: 'black',
+		weight: 3,
+		opacity: 0.8,
+		smoothFactor: 1
+
+		});
+	street.addTo(map);
+	polylines.push(street);
+}
+function addStreet(town1, town2){
+	town1.streets.push(town2);
+	town2.streets.push(town1);
+}
+function removeTown(index){
+	console.log(towns[index]);
+	for(var i in towns[index].rivers){ // remove all riverconnections
+		var friend = towns[index].rivers[i];
+		for(var i in friend.rivers){
+			if(friend.rivers[i] == towns[index]){
+				friend.rivers.splice(i, 1);
+				break;
+			}
+		}
+	}
+	for(var i in towns[index].streets){ // remove all streetconnections
+		var friend = towns[index].streets[i];
+		for(var i in friend.streets){
+			if(friend.streets[i] == towns[index]){
+				friend.streets.splice(i, 1);
+				break;
+			}
+		}
+	}
+	
+	towns.splice(index, 1);
+}
+
+$("#test").click("click",function(e){
+	updateMap();
+});
+
 
 
 
@@ -172,6 +331,10 @@ $(function() {
     });
     $( "#amount" ).val( "Years: 0 Weeks: 0" );
   });
+ 
+function getSliderValue(){
+	return $('#slider-range-max').slider("option", "value");
+}
 
 });
 
