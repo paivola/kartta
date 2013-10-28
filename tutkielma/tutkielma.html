@@ -49,7 +49,6 @@
 		<div id="slider-range-max"></div>
 		
 	</div>
-	<button id = "test">TEST</button> <!-- POISTA!-->
 
 </body>
 
@@ -119,7 +118,9 @@ function onMarkerClick(a) {
 	 town1 = towns[getTownIndexByMarker(this)];
      markers.push(a.latlng);   
 	}
-	
+	else if(markers[0] == markers[1]){
+		console.log("Do nothing");
+	}
 	else {
 	town2 = towns[getTownIndexByMarker(this)];
     markers.push(a.latlng);
@@ -303,10 +304,6 @@ function removeTown(index){
 	
 	towns.splice(index, 1);
 }
-
-$("#test").click("click",function(e){
-	updateMap();
-});
 
 
 
