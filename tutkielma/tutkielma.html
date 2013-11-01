@@ -35,9 +35,9 @@
 	Tuplaklikkaa uuden kaupungin luomiseksi. Vaylan luomiseksi klikkaa alkumarkkeria ja loppumarkkeria.  
 	</div>
 
-	<div id="map" style="height:500px;width:371px;background:red;">
+	<div id="map" >
 
-	<img src="msomalia.gif" style="width:371px;height:500px;"> </img>
+	<img id = "somalia" src="msomalia.gif"> </img>
 	</div>
 
 	<div id = "timeSlider">
@@ -49,6 +49,7 @@
 		<div id="slider-range-max"></div>
 		
 	</div>
+	
 
 </body>
 
@@ -255,6 +256,17 @@ function getTownIndexByLatlng(latlng){
 	}
 }
 function addRiver(town1, town2){
+	if(town1==NaN || town2==NaN){
+		console.log("Error, you tried to connect towns: "+town1+" "+town2);
+		return 0;
+	}
+	// I assume that (town2 in town1.streets) <=> (town1 in town2.streets)
+	for(var i in town1.rivers){
+		if(town1.rivers[i].id == town2.id){
+			console.log("Towns already connected");
+			return "already connected";
+		}
+	}
 	town1.rivers.push(town2);
 	town2.rivers.push(town1);
 }
@@ -290,6 +302,13 @@ function addStreet(town1, town2){
 	if(town1==NaN || town2==NaN){
 		console.log("Error, you tried to connect towns: "+town1+" "+town2);
 		return 0;
+	}
+	// I assume that (town2 in town1.streets) <=> (town1 in town2.streets)
+	for(var i in town1.streets){
+		if(town1.streets[i].id == town2.id){
+			console.log("Towns already connected");
+			return "already connected";
+		}
 	}
 	town1.streets.push(town2);
 	town2.streets.push(town1);
