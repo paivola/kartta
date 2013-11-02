@@ -30,14 +30,17 @@
 	   <input type="radio" name="way" value="street" id="street">Street<br>
 	   <input type="radio" name="way" value="river">River<br>
 	</div>
+	<button class="btn btn-default" id="select_object"> Object options </button>
+	<div id="object_options" style="display:none;">
+	   <!-- Radio inputteja lis‰t‰‰n myˆhemmin -->
+	</div>
 
 
 	Tuplaklikkaa uuden kaupungin luomiseksi. Vaylan luomiseksi klikkaa alkumarkkeria ja loppumarkkeria.  
 	</div>
+	<div id="map" >
 
-	<div id="map" style="height:500px;width:371px;background:red;">
-
-	<img src="msomalia.gif" style="width:371px;height:500px;"> </img>
+	<img id = "somalia" src="msomalia.gif"> </img>
 	</div>
 
 	<div id = "timeSlider">
@@ -49,6 +52,7 @@
 		<div id="slider-range-max"></div>
 		
 	</div>
+	
 
 </body>
 
@@ -58,11 +62,24 @@
 <script>
 
 $( document ).ready(function() {
+objectProtos = [{"type":"town","attributes":["vakiluku", "ruoka"]} , {"type":"pelto", "attributes":["uli"]}];
+connectionProtos = [{"type":"river", "connected":["town", "town"], "attributes":["syvyys"]}];
 
-var towns = [];
+addRadioButtons();
+
+function addRadioButtons(){
+	for(var i in objectProtos){ // lis‰t‰‰n kaikille "type" oma nappula
+			$("#object_options").append('<input type="radio" name="obj" value='+objectProtos[i].type+'>'+objectProtos[i].type+'<br>');
+	}
+}
+
+
+
+var objects = [];
+var connections = [];
 var id = 1;
 var popup = false;
-var polylines = [];
+
 var markerdbl = false;
 
 var map = L.map('map').setView([51.5, -0.09], 13);
@@ -89,51 +106,92 @@ $('input:radio[name=way]').change(function() {
   $( "#way_options").slideUp();
 });
 
+
+
+$( "#select_object" ).click(function() {
+	$( "#object_options").slideToggle();
+});
+
+var obj_option = objectProtos[0].type;  // Mik‰ objecti on valittu, aluksi defaultti ensimm‰inen
+$('input:radio[name=obj]').val([obj_option]);
+
+$('input:radio[name=obj]').change(function() {
+  obj_option = $('input[name="obj"]:checked').val();
+  $( "#way_options").slideUp();
+});
+
 markers = new Array();
+
 
 function onMapClick(e) {
 	var latlng = e.latlng
-    var marker = L.marker(latlng, options={"title" : id}).addTo(map);
+	
+	object = {"type":obj_option, "latlng":latlng};
+	object.marker = getMarker(object, false);
+
+	id+=1;
+	
+}
+function getMarker(obj, selected){ //selected boolean
+	//Luo ja palauttaa markkerin riippuen objectin tyypist‰.
+	var redMarker = L.AwesomeMarkers.icon({
+		icon: 'coffee', 
+		color: 'red'
+	});
+	var greenMarker = L.AwesomeMarkers.icon({
+		icon: 'coffee', 
+		color: 'green'
+	});
+	var orangeMarker = L.AwesomeMarkers.icon({
+		icon: 'coffee', 
+		color: 'orange'
+	});
+	var blueMarker = L.AwesomeMarkers.icon({
+		icon: 'coffee', 
+		color: 'blue'
+	});
+	var yellowMarker = L.AwesomeMarkers.icon({
+		icon: 'coffee', 
+		color: 'black'
+	});
+	
+	markers = [redMarker, greenMarker, orangeMarker, blueMarker];
+	x=0;
+	for(var i in objectProtos){  // x riippuu typest‰, ja markkeri valitaan sen perusteella.
+		if(objectProtos[i].type == obj.type){
+			x=i;
+		}
+	}
+	
+	var marker = L.marker(obj.latlng, options={"title" : id, "icon":markers[x]}).addTo(map);
     marker.on('click', onMarkerClick);
 	marker.addEventListener( 'dblclick', onMarkerdblClick);
     marker.markerZoomAnimation = false;
-	
-	var town = {"marker":[marker, false], "id":id, "latlng":latlng, "rivers":[], "streets":[]}; // rivers and streets' members towns
-	// town.marker = [marker, selected]
-	id+=1;
-	towns.push(town);
-	
+	return marker;
 }
+
 var town1;
 var town2;
 function onMarkerClick(a) {
-	var index = getTownIndexByMarker(this);
+	this //marker
 	if(popup){
 		popup = false;
 		redrawMarkers();
 	}
-	if(typeof index== 'undefined'){
-		console.log("undefined!!");
-		return 0;
-	}
 	else if(markers.length == 0){
-		town1 = towns[index];
-		town1.marker[1]=true;
+		// opacity pienenee
 		updateMarker(town1);
-		
 		markers.push(a.latlng);  
 	}
 	else {
-	town2 = towns[index];
-	if(town1.latlng == town2.latlng){
+	
+	if(town1.latlng == town2.latlng){  // jos valitut samat
 	
 		window.setTimeout(function(e){
 			if(markerdbl){
 				// do nothing
 			}
 			else{	// unselect marker
-				town1.marker[1]=false;
-				updateMarker(town1);
 				markers=[];
 			}
 			markerdbl=false;
@@ -142,8 +200,7 @@ function onMarkerClick(a) {
 		return -9000<9000;
 	
 	}
-	town1.marker[1] = false;
-	updateMarker(town1);
+	// inselect marker
 	
     markers.push(a.latlng);
     var street = new L.Polyline(markers, {
@@ -166,12 +223,10 @@ function onMarkerClick(a) {
 
     if(way_option == 'street') {
     	street.addTo(map);
-		addStreet(town1, town2);
 		polylines.push(street);
 		
     } else if(way_option == 'river') {
     	river.addTo(map);
-		addRiver(town1, town2);
 		polylines.push(river);
     } else {
     	alert("Et ole valinnut vaylan tyyppia.");
@@ -189,9 +244,7 @@ function onMarkerdblClick(a){
 	this.bindPopup("<b>Delete?</b><br/><button class='deleteButton'>Yes</button>").openPopup();
 	popup = true;
 	$(".deleteButton").click( function(){
-		var townindex = -3;
-		townindex = getTownIndexByMarkerLatlng(a.latlng);
-		console.log("townindex: "+townindex);
+		
 		map.removeLayer(towns[townindex].marker[0]);
 		removeTown(townindex);
 		markers = new Array();
@@ -204,34 +257,15 @@ function onMarkerdblClick(a){
 
 map.on('dblclick', onMapClick);
 
-var redMarker = L.AwesomeMarkers.icon({
-icon: 'coffee', 
-color: 'red'
-});
+
 
 function redrawMarkers(){
 	for(var i in towns){
 		updateMarker(towns[i]);
 	}
 }
-function redrawConnections(){ // now all the Connections are drawed twice
-	for(var i in polylines){
-		map.removeLayer( polylines[i] );
-	}
-	polylines = [];
+function redrawConnections(){ 
 	
-	for(var i in towns){
-		for(var j in towns[i].rivers){
-			var town1 = towns[i];
-			var town2 = towns[i].rivers[j];
-			drawRiver(town1, town2);
-		}
-		for(var j in towns[i].streets){
-			var town1 = towns[i];
-			var town2 = towns[i].streets[j];
-			drawStreet(town1, town2);
-		}
-	}
 }
 
 
@@ -240,60 +274,8 @@ function updateMap(){
 	redrawConnections();
 }
 
-function getTownIndexByMarker(marker){
-	for(var i in towns){
-		if(towns[i].marker[0] == marker){
-			return i;
-		}
-	}
-}
-function getTownIndexByLatlng(latlng){
-	for(var i in towns){
-		if(towns[i].latlng == latlng){
-			return i;
-		}
-	}
-}
-function addRiver(town1, town2){
-	town1.rivers.push(town2);
-	town2.rivers.push(town1);
-}
-function drawRiver(town1, town2){
-	var list = new Array();
-	list.push(town1.latlng);
-	list.push(town2.latlng);
-	var river = new L.Polyline(list, {
-		color: 'blue',
-		weight: 3,
-		opacity: 0.8,
-		smoothFactor: 1
 
-		});
-	river.addTo(map);
-	polylines.push(river);
-}
-function drawStreet(town1, town2){
-	var list = new Array();
-	list.push(town1.latlng);
-	list.push(town2.latlng);
-	var street = new L.Polyline(list, {
-		color: 'black',
-		weight: 3,
-		opacity: 0.8,
-		smoothFactor: 1
 
-		});
-	street.addTo(map);
-	polylines.push(street);
-}
-function addStreet(town1, town2){
-	if(town1==NaN || town2==NaN){
-		console.log("Error, you tried to connect towns: "+town1+" "+town2);
-		return 0;
-	}
-	town1.streets.push(town2);
-	town2.streets.push(town1);
-}
 function removeTown(index){
 	for(var i in towns[index].rivers){ // remove all riverconnections
 		var friend = towns[index].rivers[i];
@@ -316,7 +298,7 @@ function removeTown(index){
 	
 	towns.splice(index, 1);
 }
-function updateMarker(town){
+function updateMarker(obj){
 	map.removeLayer(town.marker[0]);
 	var marker;
 	if(town.marker[1]){
@@ -332,13 +314,6 @@ function updateMarker(town){
 	town.marker[0] = marker;
 }
 
-function getTownIndexByMarkerLatlng(latlng){
-	for(var i in towns){
-		if(towns[i].latlng==latlng){
-			return i;
-		}
-	}
-}
 
 
 
