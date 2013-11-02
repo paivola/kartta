@@ -75,6 +75,40 @@ function addRadioButtons(){
 	}
 }
 
+function getIconByType( type ){
+
+        var redMarker = L.AwesomeMarkers.icon({
+		  icon: 'coffee', 
+		  color: 'red'
+	    });
+	    var greenMarker = L.AwesomeMarkers.icon({
+		  icon: 'coffee', 
+		  color: 'green'
+	    });
+	    var orangeMarker = L.AwesomeMarkers.icon({
+		   icon: 'coffee', 
+		   color: 'orange'
+ 	    });
+	    var blueMarker = L.AwesomeMarkers.icon({
+		   icon: 'coffee', 
+		   color: 'blue'
+	    });
+	    var yellowMarker = L.AwesomeMarkers.icon({
+		   icon: 'coffee', 
+		   color: 'black'
+	    });
+	
+	   markers = [redMarker, greenMarker, orangeMarker, blueMarker];
+	   x=0;
+	   for(var i in objectProtos){  // x riippuu typestä, ja markkeri valitaan sen perusteella.
+		  if(objectProtos[i].type == type){
+			x=i;
+		  }
+	   }
+	   return markers[x];
+
+}
+
 
 
 var objects = [];
@@ -137,6 +171,7 @@ function onMapClick(e) {
 function getMarker(obj, selected){ //selected boolean
 	//Luo ja palauttaa markkerin riippuen objectin tyypistä.
 	var marker = L.marker(obj.latlng, options={"title" : id, "icon":getIconByType(obj.type)}).addTo(map);
+
     marker.on('click', onMarkerClick);
 	marker.addEventListener( 'dblclick', onMarkerdblClick);
     marker.markerZoomAnimation = false;
