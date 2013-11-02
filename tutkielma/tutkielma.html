@@ -40,6 +40,8 @@
 	<img src="msomalia.gif" style="width:371px;height:500px;"> </img>
 	</div>
 
+	<div id="get_timestep" class="btn"> Get timestep </div>
+
 	<div id = "timeSlider">
 		
 		<p>
@@ -98,7 +100,8 @@ function onMapClick(e) {
 	marker.addEventListener( 'dblclick', onMarkerdblClick);
     marker.markerZoomAnimation = false;
 	
-	var town = {"marker":[marker, false], "id":id, "latlng":latlng, "rivers":[], "streets":[]}; // rivers and streets' members towns
+	var town = {"marker":[marker, false], "id":id, "latlng":latlng, "objects":[]}; // rivers and streets' members towns
+
 	// town.marker = [marker, selected]
 	id+=1;
 	towns.push(town);
@@ -341,6 +344,16 @@ function getTownIndexByMarkerLatlng(latlng){
 }
 
 
+$( "#get_timestep" ).click(function() {
+  var sliderValue = getSliderValue();
+  var timeJSON = sliderValueToJson( sliderValue );
+  alert( timeJSON );
+});
+
+function sliderValueToJson( sliderValue ){
+     var timeJSON = {"timesteps": sliderValue};
+     return timeJSON;
+}
 
 
 // slider code
