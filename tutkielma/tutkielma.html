@@ -11,7 +11,6 @@
 <link rel="stylesheet" href="http://code.jquery.com/ui/1.10.3/themes/smoothness/jquery-ui.css" />
 
 
- <link href="bootstrap.min.css" rel="stylesheet" media="screen">
  <link href="bootstrap.css" rel="stylesheet" media="screen">
  <link href="leaflet-icon.css" rel="stylesheet" media="screen">
 
@@ -27,8 +26,9 @@
 	<div style="height:685px;width:180px;padding:10px;margin-right:20px;float:left;background:rgb(70,140,200);border-radius:5px;">
 	<button class="btn btn-default" id="add_marker">Way options </button>
 	<div id="way_options" style="display:none;">
-	   <input type="radio" name="way" value="street" id="street">Street<br>
+	   <input type="radio" name="way" value="street">Street<br>
 	   <input type="radio" name="way" value="river">River<br>
+	   <input type="radio" name="way" value="connection">Connection<br>
 	</div>
 	<button class="btn btn-default" id="select_object"> Object options </button>
 	<div id="object_options" style="display:none;">
@@ -64,8 +64,12 @@
 <script>
 
 $( document ).ready(function() {
+
 objectProtos = [{"type":"town","attributes":["vakiluku", "ruoka"]} , {"type":"pelto", "attributes":["uli"]}];
-connectionProtos = [{"type":"river", "connected":["town", "town"], "attributes":["syvyys"]}];
+
+streetComb = [{"pair":["town", "town"], "attributes":["kest‰vyys"]}];
+riverComb= [{"pair":["town", "town"], "attributes":["kest‰vyys"]}];
+connectionComb = [{"pair":["town", "town"], "attributes":[]}, {"pair":["town", "pelto"], "attributes":[]}];
 
 addRadioButtons();
 
@@ -98,21 +102,21 @@ function getIconByType( type ){
 		   color: 'black'
 	    });
 	
-	   markers = [redMarker, greenMarker, orangeMarker, blueMarker];
+	   var markers2 = [redMarker, greenMarker, orangeMarker, blueMarker];
 	   x=0;
 	   for(var i in objectProtos){  // x riippuu typest‰, ja markkeri valitaan sen perusteella.
 		  if(objectProtos[i].type == type){
 			x=i;
 		  }
 	   }
-	   return markers[x];
+	   return markers2[x];
 
 }
 
 
 
-var objects = [];
-var connections = [];
+var objects = [] // objektill ainakin id, marker, latlng, type
+var connections = []; // connectionObjectilla ainakin id, pair, ja type    --- pair on list = [id1, id2] , type street, river tai connection
 var id = 1;
 var popup = false;
 
@@ -143,7 +147,6 @@ $('input:radio[name=way]').change(function() {
 });
 
 
-
 $( "#select_object" ).click(function() {
 	$( "#object_options").slideToggle();
 });
@@ -153,53 +156,66 @@ $('input:radio[name=obj]').val([obj_option]);
 
 $('input:radio[name=obj]').change(function() {
   obj_option = $('input[name="obj"]:checked').val();
-  $( "#way_options").slideUp();
+  $( "#object_options").slideUp();
 });
 
-markers = new Array();
+markers = new Array();  // muistaa max kahden klikatun objektin latlng
 
 
-function onMapClick(e) {
+
+function onMapClick(e) { // lis‰‰ objektin
 	var latlng = e.latlng
-	
-	object = {"type":obj_option, "latlng":latlng};
-	object.marker = getMarker(object, false);
+	object = {"type":obj_option, "latlng":latlng, "id":id};
+	object.marker = [getMarker(object, false), false];  // [markerobject, onkoValittu?]
+	objects.push(object);
 
 	id+=1;
 	
 }
 function getMarker(obj, selected){ //selected boolean
 	//Luo ja palauttaa markkerin riippuen objectin tyypist‰.
-	var marker = L.marker(obj.latlng, options={"title" : id, "icon":getIconByType(obj.type)}).addTo(map);
-
+	var marker;
+	if(selected){
+		marker = L.marker(obj.latlng, options={"title" : id, "icon":getIconByType(obj.type), "opacity":0.6}).addTo(map);
+	}
+	else{
+		marker = L.marker(obj.latlng, options={"title" : id, "icon":getIconByType(obj.type)}).addTo(map);
+	}
+	
     marker.on('click', onMarkerClick);
 	marker.addEventListener( 'dblclick', onMarkerdblClick);
     marker.markerZoomAnimation = false;
 	return marker;
 }
 
-var town1;
-var town2;
+var obj1;
+var obj2;
 function onMarkerClick(a) {
+	var latlng = a.latlng;
+	console.log(markers);
 	this //marker
 	if(popup){
 		popup = false;
 		redrawMarkers();
 	}
+	
 	else if(markers.length == 0){
-		// opacity pienenee
-		updateMarker(town1);
+		obj1 = objects[getObjectIndexBylatlng(latlng)];
+		obj1.marker[1]=true;// Objekti on valittu
+		updateMarker(obj1);
 		markers.push(a.latlng);  
 	}
 	else {
+	obj2 =objects[getObjectIndexBylatlng(latlng)];
+	if(obj1.latlng == obj2.latlng){  // jos valitut samat
 	
-	if(town1.latlng == town2.latlng){  // jos valitut samat
-	
-		window.setTimeout(function(e){
+		window.setTimeout(function(e){   // Odotetaan v‰h‰n aikaa, jotta markerdbl ehtii kattoo, et onko tuplaklikkaus vai ei
 			if(markerdbl){
 				// do nothing
 			}
 			else{	// unselect marker
+				obj1.marker[1]=false;
+				updateMarker(obj1);
 				markers=[];
 			}
 			markerdbl=false;
@@ -208,10 +224,46 @@ function onMarkerClick(a) {
 		return -9000<9000;
 	
 	}
-	// inselect marker
 	
-    markers.push(a.latlng);
-    var street = new L.Polyline(markers, {
+	obj1.marker[1]=false;
+	updateMarker(obj1);// unselect marker
+	addConnection(obj1, obj2);
+    markers = new Array();
+  }
+};
+
+
+function onMarkerdblClick(a){
+	markerdbl = true;
+	console.log(a.latlng);
+	var modMarker = this;
+	this.bindPopup("<b>Delete?</b><br/><button class='deleteButton'>Yes</button>").openPopup();
+	popup = true;
+	$(".deleteButton").click( function(){
+		objIndex = getObjectIndexBylatlng(a.latlng);
+		console.log(objIndex);
+		map.removeLayer(objects[objIndex].marker[0]);
+		removeObject(objIndex);
+		markers = new Array();
+		updateMap();
+	
+    });
+
+	
+}
+
+map.on('dblclick', onMapClick);
+
+
+
+function redrawMarkers(){
+	for(var i in objects){
+		updateMarker(objects[i]);
+	}
+}
+function redrawConnections(){
+	console.log("Ei valmis!");
+	var street = new L.Polyline(markers, {
     color: 'black',
     weight: 3,
     opacity: 0.8,
@@ -226,54 +278,6 @@ function onMarkerClick(a) {
 
     });
 	
-	
-	
-
-    if(way_option == 'street') {
-    	street.addTo(map);
-		polylines.push(street);
-		
-    } else if(way_option == 'river') {
-    	river.addTo(map);
-		polylines.push(river);
-    } else {
-    	alert("Et ole valinnut vaylan tyyppia.");
-    }
-    markers = new Array();
-  }
-};
-
-
-function onMarkerdblClick(a){
-	markerdbl = true;
-	console.log("dbl: " + this);
-	console.log(a.latlng);
-	var modMarker = this;
-	this.bindPopup("<b>Delete?</b><br/><button class='deleteButton'>Yes</button>").openPopup();
-	popup = true;
-	$(".deleteButton").click( function(){
-		
-		map.removeLayer(towns[townindex].marker[0]);
-		removeTown(townindex);
-		markers = new Array();
-		updateMap();
-	
-    });
-
-	
-}
-
-map.on('dblclick', onMapClick);
-
-
-
-function redrawMarkers(){
-	for(var i in towns){
-		updateMarker(towns[i]);
-	}
-}
-function redrawConnections(){ 
-	
 }
 
 
@@ -284,44 +288,63 @@ function updateMap(){
 
 
 
-function removeTown(index){
-	for(var i in towns[index].rivers){ // remove all riverconnections
-		var friend = towns[index].rivers[i];
-		for(var i in friend.rivers){
-			if(friend.rivers[i] == towns[index]){
-				friend.rivers.splice(i, 1);
-				break;
-			}
-		}
-	}
-	for(var i in towns[index].streets){ // remove all streetconnections
-		var friend = towns[index].streets[i];
-		for(var i in friend.streets){
-			if(friend.streets[i] == towns[index]){
-				friend.streets.splice(i, 1);
-				break;
-			}
-		}
-	}
-	
-	towns.splice(index, 1);
+function removeObject(index){
+	// remove connections----------------------------------------------------------------------------------------------------------------------------------
+	objects.splice(index, 1);
 }
 function updateMarker(obj){
-	map.removeLayer(town.marker[0]);
+	map.removeLayer(obj.marker[0]);
 	var marker;
-	if(town.marker[1]){
-		marker= L.marker(town.latlng, options={"title" : town.id, "opacity":0.6}).addTo(map);
+	if(obj.marker[1]){
+		marker= L.marker(obj.latlng, options={"title" : obj.id, "opacity":0.6, "icon":getIconByType(obj.type)}).addTo(map);
 	}
 	else{
-		marker= L.marker(town.latlng, options={"title" : town.id}).addTo(map);
+		marker= L.marker(obj.latlng, options={"title" : obj.id, "icon":getIconByType(obj.type)}).addTo(map);
 	}
 	
 	marker.on('click', onMarkerClick);
 	marker.addEventListener( 'dblclick', onMarkerdblClick);
 	marker.markerZoomAnimation = false;
-	town.marker[0] = marker;
+	obj.marker[0] = marker;
 }
 
+function getObjectIndexBylatlng(latlng){
+	for(var i in objects){
+		console.log(objects);
+		if(latlng == objects[i].latlng){
+			return i;
+		}
+	}
+
+}
+function addConnection(obj1, obj2){
+	var valid = false; // onko yhdistystapa objectien v‰lill‰ oikeaoppinen? default, ei.
+	if(way_option == "street"){
+		for(var i in streetComb){  // tarkistetaan, voidaanko obj1 ja obj 2 yhdist‰‰
+			pair = streetComb[i].pair;
+			if(obj1.type == pair[0] || obj1.type == pair[1]){
+				if(obj2.type == pair[0] || obj2.type == pair[1]){
+					valid = true;
+					break;
+				}
+			}
+		}
+		if(valid){
+			connection = {"type":"street", "pair":[obj1.id, obj2.id]}
+		
+		}
+	
+	}
+	else if(way_option == "river"){
+	}
+	else if(way_option == "connection"){
+	}
+	else{
+		console.log("BugBug bug bug bug")
+	}
+	
+
+}
 
 
 $( "#get_timestep" ).click(function() {
