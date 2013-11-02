@@ -182,9 +182,8 @@ function makeMarkerbox(){
 
 function getMarker(obj, selected){ //selected boolean
 	//Luo ja palauttaa markkerin riippuen objectin tyypistä.
-	
-	
-	var marker = L.marker(obj.latlng, options={"title" : id, "icon":markers[x]}).addTo(map);
+	var marker = L.marker(obj.latlng, options={"title" : id, "icon":getIconByType(obj.type)}).addTo(map);
+
     marker.on('click', onMarkerClick);
 	marker.addEventListener( 'dblclick', onMarkerdblClick);
     marker.markerZoomAnimation = false;
