@@ -43,6 +43,8 @@
 	<img id = "somalia" src="msomalia.gif"> </img>
 	</div>
 
+	<div id="get_timestep" class="btn"> Get timestep </div>
+
 	<div id = "timeSlider">
 		
 		<p>
@@ -316,6 +318,16 @@ function updateMarker(obj){
 
 
 
+$( "#get_timestep" ).click(function() {
+  var sliderValue = getSliderValue();
+  var timeJSON = sliderValueToJson( sliderValue );
+  alert( timeJSON );
+});
+
+function sliderValueToJson( sliderValue ){
+     var timeJSON = {"timesteps": sliderValue};
+     return timeJSON;
+}
 
 
 // slider code
