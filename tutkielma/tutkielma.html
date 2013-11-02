@@ -34,13 +34,12 @@
 	<div id="object_options" style="display:none;">
 	   <!-- Radio inputteja lis‰t‰‰n myˆhemmin -->
 	</div>
+	<div id="markerbox" style="height:200px;width:100px;"> </div>
 
 
 	Tuplaklikkaa uuden kaupungin luomiseksi. Vaylan luomiseksi klikkaa alkumarkkeria ja loppumarkkeria.  
 	</div>
 	<div id="map" >
-
-	<div id="markerbox"> </div>
 
 	<img id = "somalia" src="msomalia.gif"> </img>
 	</div>
@@ -67,11 +66,11 @@
 
 $( document ).ready(function() {
 
-makeMarkerbox();
 objectProtos = [{"type":"town","attributes":["vakiluku", "ruoka"]} , {"type":"pelto", "attributes":["uli"]}];
 connectionProtos = [{"type":"river", "connected":["town", "town"], "attributes":["syvyys"]}];
 
 addRadioButtons();
+makeMarkerbox();
 
 function addRadioButtons(){
 	for(var i in objectProtos){ // lis‰t‰‰n kaikille "type" oma nappula
@@ -175,15 +174,24 @@ function onMapClick(e) {
 
 function makeMarkerbox(){
       for(var i in objectProtos){
-      	var marker = 
+
+      	if(objectProtos[i].type == "town"){
+
+
+      	} else if(objectProtos[i].type == "river"){
+      		
+      	}
+      	$( "#markerbox" ).append('<img src="images/markers-soft@2x.png"> </img>');
+
       }
 
 }
 
 function getMarker(obj, selected){ //selected boolean
 	//Luo ja palauttaa markkerin riippuen objectin tyypist‰.
-	var marker = L.marker(obj.latlng, options={"title" : id, "icon":getIconByType(obj.type)}).addTo(map);
-
+	
+	
+	var marker = L.marker(obj.latlng, options={"title" : id, "icon":markers[x]}).addTo(map);
     marker.on('click', onMarkerClick);
 	marker.addEventListener( 'dblclick', onMarkerdblClick);
     marker.markerZoomAnimation = false;
