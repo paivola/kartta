@@ -116,7 +116,8 @@ function getIconByType( type ){
 
 
 var objects = [] // objektill ainakin id, marker, latlng, type
-var connections = []; // connectionObjectilla ainakin id, pair, ja type    --- pair on list = [id1, id2] , type street, river tai connection
+var connections = []; // connectionObjectilla ainakin id, pair, type, ja polyline    --- pair on list = [id1, id2] , type street, river tai 
+					
 var id = 1;
 var popup = false;
 
@@ -192,7 +193,6 @@ var obj1;
 var obj2;
 function onMarkerClick(a) {
 	var latlng = a.latlng;
-	console.log(markers);
 	this //marker
 	if(popup){
 		popup = false;
@@ -235,17 +235,14 @@ function onMarkerClick(a) {
 
 function onMarkerdblClick(a){
 	markerdbl = true;
-	console.log(a.latlng);
 	var modMarker = this;
 	this.bindPopup("<b>Delete?</b><br/><button class='deleteButton'>Yes</button>").openPopup();
 	popup = true;
 	$(".deleteButton").click( function(){
 		objIndex = getObjectIndexBylatlng(a.latlng);
-		console.log(objIndex);
 		map.removeLayer(objects[objIndex].marker[0]);
 		removeObject(objIndex);
 		markers = new Array();
-		updateMap();
 	
     });
 
@@ -256,40 +253,20 @@ map.on('dblclick', onMapClick);
 
 
 
-function redrawMarkers(){
-	for(var i in objects){
-		updateMarker(objects[i]);
-	}
-}
-function redrawConnections(){
-	console.log("Ei valmis!");
-	var street = new L.Polyline(markers, {
-    color: 'black',
-    weight: 3,
-    opacity: 0.8,
-    smoothFactor: 1
-
-    });
-    var river = new L.Polyline(markers, {
-    color: 'blue',
-    weight: 3,
-    opacity: 0.8,
-    smoothFactor: 1
-
-    });
-	
-}
-
-
-function updateMap(){
-	redrawMarkers();
-	redrawConnections();
-}
-
-
 
 function removeObject(index){
-	// remove connections----------------------------------------------------------------------------------------------------------------------------------
+	var x = connections.length;
+	while(x>0){
+		x-=1;
+		var pair = connections[x].pair
+		if(pair[0] == objects[index].id || pair[1] == objects[index].id){
+			map.removeLayer(connections[x].polyline);
+			connections.splice(x, 1);
+		}
+	
+	}
+	
+	
 	objects.splice(index, 1);
 }
 function updateMarker(obj){
@@ -310,12 +287,17 @@ function updateMarker(obj){
 
 function getObjectIndexBylatlng(latlng){
 	for(var i in objects){
-		console.log(objects);
 		if(latlng == objects[i].latlng){
 			return i;
 		}
 	}
-
+}
+function getObjectById(id){
+	for(var i in objects){
+		if(objects[i].id == id){
+			return objects[i];
+		}
+	}
 }
 function addConnection(obj1, obj2){
 	var valid = false; // onko yhdistystapa objectien v‰lill‰ oikeaoppinen? default, ei.
@@ -330,20 +312,79 @@ function addConnection(obj1, obj2){
 			}
 		}
 		if(valid){
-			connection = {"type":"street", "pair":[obj1.id, obj2.id]}
-		
+			connection = {"type":"street", "pair":[obj1.id, obj2.id]};
+			addPolyline(connection);
+			connections.push(connection);
 		}
 	
 	}
 	else if(way_option == "river"){
+		for(var i in riverComb){  // tarkistetaan, voidaanko obj1 ja obj 2 yhdist‰‰
+			pair = riverComb[i].pair;
+			if(obj1.type == pair[0] || obj1.type == pair[1]){
+				if(obj2.type == pair[0] || obj2.type == pair[1]){
+					valid = true;
+					break;
+				}
+			}
+		}
+		if(valid){
+			connection = {"type":"river", "pair":[obj1.id, obj2.id]};
+			addPolyline(connection);
+			connections.push(connection);
+		}
 	}
 	else if(way_option == "connection"){
+		for(var i in connectionComb){  // tarkistetaan, voidaanko obj1 ja obj 2 yhdist‰‰
+			pair = connectionComb[i].pair;
+			if(obj1.type == pair[0] || obj1.type == pair[1]){
+				if(obj2.type == pair[0] || obj2.type == pair[1]){
+					valid = true;
+					break;
+				}
+			}
+		}
+		if(valid){
+			connection = {"type":"connection", "pair":[obj1.id, obj2.id]};
+			addPolyline(connection);
+			connections.push(connection);
+		}
 	}
 	else{
 		console.log("BugBug bug bug bug")
 	}
+}
+function addPolyline(connection){
+	var color;
+	if(connection.type == "street"){
+		color = "brown";
+	}
+	else if(connection.type == "river"){
+		color = "blue";
+	}
+	else if(connection.type == "connection"){
+		color = "grey"
+	}
+	else{
+		console.log("Bug.");
+	}
+	var id1 = connection.pair[0];
+	var id2 = connection.pair[1];
 	
-
+	var line = new L.Polyline([getObjectById(id1).latlng, getObjectById(id2).latlng], {
+	color: color,
+	weight: 3,
+	opacity: 0.8,
+	smoothFactor: 1
+	});
+	
+	connection.polyline = line;
+	line.addTo(map);
+}
+function redrawMarkers(){
+	for(var i in objects){
+		updateMarker(objects[i]);
+	}
 }
 
 
