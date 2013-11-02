@@ -38,9 +38,10 @@
 
 	Tuplaklikkaa uuden kaupungin luomiseksi. Vaylan luomiseksi klikkaa alkumarkkeria ja loppumarkkeria.  
 	</div>
-	<div id="map" >
+	<div id="map" style="background:white;">
 
-	<img id = "somalia" src="msomalia.gif"> </img>
+	<img id = "somalia" src="msomalia.gif" style="float:left;"> </img>
+	<div id="markerbox" style="height:200px;width:100px;float:left;"> </div>
 	</div>
 
 	<div id="get_timestep" class="btn"> Get timestep </div>
@@ -72,6 +73,7 @@ riverComb= [{"pair":["town", "town"], "attributes":["kest‰vyys"]}];
 connectionComb = [{"pair":["town", "town"], "attributes":[]}, {"pair":["town", "pelto"], "attributes":[]}];
 
 addRadioButtons();
+makeMarkerbox();
 
 function addRadioButtons(){
 	for(var i in objectProtos){ // lis‰t‰‰n kaikille "type" oma nappula
@@ -173,8 +175,19 @@ function onMapClick(e) { // lis‰‰ objektin
 	id+=1;
 	
 }
+
+function makeMarkerbox(){
+	var imagelist = ['<img src="images/red.png" style="height:50px;width:40px;"> </img>', '<img style="height:50px;width:40px;" src="images/green.png"> </img>', '<img src="images/orange.png" style="height:50px;width:40px;"> </img>', ]
+      for(var i in objectProtos){
+
+             $( "#markerbox" ).append(imagelist[i] + objectProtos[i].type);
+      }
+
+}
+
 function getMarker(obj, selected){ //selected boolean
 	//Luo ja palauttaa markkerin riippuen objectin tyypist‰.
+
 	var marker;
 	if(selected){
 		marker = L.marker(obj.latlng, options={"title" : id, "icon":getIconByType(obj.type), "opacity":0.6}).addTo(map);
