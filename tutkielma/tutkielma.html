@@ -40,6 +40,8 @@
 	</div>
 	<div id="map" >
 
+	<div id="markerbox"> </div>
+
 	<img id = "somalia" src="msomalia.gif"> </img>
 	</div>
 
@@ -64,6 +66,8 @@
 <script>
 
 $( document ).ready(function() {
+
+makeMarkerbox();
 objectProtos = [{"type":"town","attributes":["vakiluku", "ruoka"]} , {"type":"pelto", "attributes":["uli"]}];
 connectionProtos = [{"type":"river", "connected":["town", "town"], "attributes":["syvyys"]}];
 
@@ -168,6 +172,14 @@ function onMapClick(e) {
 	id+=1;
 	
 }
+
+function makeMarkerbox(){
+      for(var i in objectProtos){
+      	var marker = 
+      }
+
+}
+
 function getMarker(obj, selected){ //selected boolean
 	//Luo ja palauttaa markkerin riippuen objectin tyypistä.
 	
