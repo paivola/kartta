@@ -3,9 +3,13 @@
 
 <script src="http://cdn.leafletjs.com/leaflet-0.6.4/leaflet.js"></script>
 <script src="http://code.jquery.com/jquery-1.10.2.min.js"></script>
+<script src="http://code.jquery.com/ui/1.10.3/jquery-ui.js"></script>
 <script src="leaflet_icons.js" type="text/javascript"></script>
 
 <link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.6.4/leaflet.css" />
+<link rel="stylesheet" href="tutkielma.css" media="screen" /> 
+<link rel="stylesheet" href="http://code.jquery.com/ui/1.10.3/themes/smoothness/jquery-ui.css" />
+
 
  <link href="bootstrap.min.css" rel="stylesheet" media="screen">
  <link href="bootstrap.css" rel="stylesheet" media="screen">
@@ -20,23 +24,31 @@
 
 <body>
 
-<div style="height:685px;width:180px;padding:10px;margin-right:20px;float:left;background:rgb(70,140,200);border-radius:5px;">
-<button class="btn btn-default" id="add_marker">Way options </button>
-<div id="way_options" style="display:none;">
-   <input type="radio" name="way" value="street" id="street">Street<br>
-   <input type="radio" name="way" value="river">River<br>
-</div>
+	<div style="height:685px;width:180px;padding:10px;margin-right:20px;float:left;background:rgb(70,140,200);border-radius:5px;">
+	<button class="btn btn-default" id="add_marker">Way options </button>
+	<div id="way_options" style="display:none;">
+	   <input type="radio" name="way" value="street" id="street">Street<br>
+	   <input type="radio" name="way" value="river">River<br>
+	</div>
 
 
-Tuplaklikkaa uuden kaupungin luomiseksi. Vaylan luomiseksi klikkaa alkumarkkeria ja loppumarkkeria.  
-</div>
+	Tuplaklikkaa uuden kaupungin luomiseksi. Vaylan luomiseksi klikkaa alkumarkkeria ja loppumarkkeria.  
+	</div>
 
-<div id="map" style="height:500px;width:371px;background:red;">
+	<div id="map" style="height:500px;width:371px;background:red;">
 
-<img src="msomalia.gif" style="width:371px;height:500px;"> </img>
-</div>
+	<img src="msomalia.gif" style="width:371px;height:500px;"> </img>
+	</div>
 
-<div style="height:20px;padding:20px;">Aikajana</div>
+	<div id = "timeSlider">
+		
+		<p>
+		  <label for="amount"></label>
+		  <input type="text" id="amount" style="border: 0; color: #f6931f; font-weight: bold;" />
+		</p>
+		<div id="slider-range-max"></div>
+		
+	</div>
 
 </body>
 
@@ -47,6 +59,11 @@ Tuplaklikkaa uuden kaupungin luomiseksi. Vaylan luomiseksi klikkaa alkumarkkeria
 
 $( document ).ready(function() {
 
+var towns = [];
+var id = 1;
+var popup = false;
+var polylines = [];
+var markerdbl = false;
 
 var map = L.map('map').setView([51.5, -0.09], 13);
 //map.dragging = false;
@@ -75,17 +92,59 @@ $('input:radio[name=way]').change(function() {
 markers = new Array();
 
 function onMapClick(e) {
-    var marker = L.marker(e.latlng, options={"title" : "123"}).addTo(map);
-
+	var latlng = e.latlng
+    var marker = L.marker(latlng, options={"title" : id}).addTo(map);
     marker.on('click', onMarkerClick);
+	marker.addEventListener( 'dblclick', onMarkerdblClick);
     marker.markerZoomAnimation = false;
+	
+	var town = {"marker":[marker, false], "id":id, "latlng":latlng, "rivers":[], "streets":[]}; // rivers and streets' members towns
+	// town.marker = [marker, selected]
+	id+=1;
+	towns.push(town);
+	
 }
-
-
+var town1;
+var town2;
 function onMarkerClick(a) {
-  if(markers.length == 0){
-     markers.push(a.latlng);   
-  } else {
+	var index = getTownIndexByMarker(this);
+	if(popup){
+		popup = false;
+		redrawMarkers();
+	}
+	if(typeof index== 'undefined'){
+		console.log("undefined!!");
+		return 0;
+	}
+	else if(markers.length == 0){
+		town1 = towns[index];
+		town1.marker[1]=true;
+		updateMarker(town1);
+		
+		markers.push(a.latlng);  
+	}
+	else {
+	town2 = towns[index];
+	if(town1.latlng == town2.latlng){
+	
+		window.setTimeout(function(e){
+			if(markerdbl){
+				// do nothing
+			}
+			else{	// unselect marker
+				town1.marker[1]=false;
+				updateMarker(town1);
+				markers=[];
+			}
+			markerdbl=false;
+		},100);
+		
+		return -9000<9000;
+	
+	}
+	town1.marker[1] = false;
+	updateMarker(town1);
+	
     markers.push(a.latlng);
     var street = new L.Polyline(markers, {
     color: 'black',
@@ -101,11 +160,19 @@ function onMarkerClick(a) {
     smoothFactor: 1
 
     });
+	
+	
+	
 
     if(way_option == 'street') {
     	street.addTo(map);
+		addStreet(town1, town2);
+		polylines.push(street);
+		
     } else if(way_option == 'river') {
     	river.addTo(map);
+		addRiver(town1, town2);
+		polylines.push(river);
     } else {
     	alert("Et ole valinnut vaylan tyyppia.");
     }
@@ -113,12 +180,192 @@ function onMarkerClick(a) {
   }
 };
 
+
+function onMarkerdblClick(a){
+	markerdbl = true;
+	console.log("dbl: " + this);
+	console.log(a.latlng);
+	var modMarker = this;
+	this.bindPopup("<b>Delete?</b><br/><button class='deleteButton'>Yes</button>").openPopup();
+	popup = true;
+	$(".deleteButton").click( function(){
+		var townindex = -3;
+		townindex = getTownIndexByMarkerLatlng(a.latlng);
+		console.log("townindex: "+townindex);
+		map.removeLayer(towns[townindex].marker[0]);
+		removeTown(townindex);
+		markers = new Array();
+		updateMap();
+	
+    });
+
+	
+}
+
 map.on('dblclick', onMapClick);
 
 var redMarker = L.AwesomeMarkers.icon({
 icon: 'coffee', 
 color: 'red'
-})
+});
+
+function redrawMarkers(){
+	for(var i in towns){
+		updateMarker(towns[i]);
+	}
+}
+function redrawConnections(){ // now all the Connections are drawed twice
+	for(var i in polylines){
+		map.removeLayer( polylines[i] );
+	}
+	polylines = [];
+	
+	for(var i in towns){
+		for(var j in towns[i].rivers){
+			var town1 = towns[i];
+			var town2 = towns[i].rivers[j];
+			drawRiver(town1, town2);
+		}
+		for(var j in towns[i].streets){
+			var town1 = towns[i];
+			var town2 = towns[i].streets[j];
+			drawStreet(town1, town2);
+		}
+	}
+}
+
+
+function updateMap(){
+	redrawMarkers();
+	redrawConnections();
+}
+
+function getTownIndexByMarker(marker){
+	for(var i in towns){
+		if(towns[i].marker[0] == marker){
+			return i;
+		}
+	}
+}
+function getTownIndexByLatlng(latlng){
+	for(var i in towns){
+		if(towns[i].latlng == latlng){
+			return i;
+		}
+	}
+}
+function addRiver(town1, town2){
+	town1.rivers.push(town2);
+	town2.rivers.push(town1);
+}
+function drawRiver(town1, town2){
+	var list = new Array();
+	list.push(town1.latlng);
+	list.push(town2.latlng);
+	var river = new L.Polyline(list, {
+		color: 'blue',
+		weight: 3,
+		opacity: 0.8,
+		smoothFactor: 1
+
+		});
+	river.addTo(map);
+	polylines.push(river);
+}
+function drawStreet(town1, town2){
+	var list = new Array();
+	list.push(town1.latlng);
+	list.push(town2.latlng);
+	var street = new L.Polyline(list, {
+		color: 'black',
+		weight: 3,
+		opacity: 0.8,
+		smoothFactor: 1
+
+		});
+	street.addTo(map);
+	polylines.push(street);
+}
+function addStreet(town1, town2){
+	if(town1==NaN || town2==NaN){
+		console.log("Error, you tried to connect towns: "+town1+" "+town2);
+		return 0;
+	}
+	town1.streets.push(town2);
+	town2.streets.push(town1);
+}
+function removeTown(index){
+	for(var i in towns[index].rivers){ // remove all riverconnections
+		var friend = towns[index].rivers[i];
+		for(var i in friend.rivers){
+			if(friend.rivers[i] == towns[index]){
+				friend.rivers.splice(i, 1);
+				break;
+			}
+		}
+	}
+	for(var i in towns[index].streets){ // remove all streetconnections
+		var friend = towns[index].streets[i];
+		for(var i in friend.streets){
+			if(friend.streets[i] == towns[index]){
+				friend.streets.splice(i, 1);
+				break;
+			}
+		}
+	}
+	
+	towns.splice(index, 1);
+}
+function updateMarker(town){
+	map.removeLayer(town.marker[0]);
+	var marker;
+	if(town.marker[1]){
+		marker= L.marker(town.latlng, options={"title" : town.id, "opacity":0.6}).addTo(map);
+	}
+	else{
+		marker= L.marker(town.latlng, options={"title" : town.id}).addTo(map);
+	}
+	
+	marker.on('click', onMarkerClick);
+	marker.addEventListener( 'dblclick', onMarkerdblClick);
+	marker.markerZoomAnimation = false;
+	town.marker[0] = marker;
+}
+
+function getTownIndexByMarkerLatlng(latlng){
+	for(var i in towns){
+		if(towns[i].latlng==latlng){
+			return i;
+		}
+	}
+}
+
+
+
+
+// slider code
+var years = 4;
+var simulationsPerYear = 26;
+
+$(function() {
+    $( "#slider-range-max" ).slider({
+      range: "max",
+      min: 0,
+      max: years*simulationsPerYear,
+      value: 0,
+      slide: function( event, ui ){
+		var y = Math.floor(ui.value/simulationsPerYear);
+		var w = (ui.value%simulationsPerYear)*(52/simulationsPerYear);  // KATSO TÄMÄÄÄ!!!
+		var string = "Years: "+ y+" Weeks: "+w;
+        $( "#amount" ).val(string);
+      }
+    });
+    $( "#amount" ).val( "Years: 0 Weeks: 0" );
+  });
+ 
+function getSliderValue(){
+	return $('#slider-range-max').slider("option", "value");
+}
 
 });
 
