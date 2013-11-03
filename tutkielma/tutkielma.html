@@ -167,6 +167,8 @@ $('input:radio[name=way]').val(['street']);
 
 $('input:radio[name=way]').change(function() {
   way_option = $('input[name="way"]:checked').val();
+  document.getElementById("add_marker").innerHTML = 
+              "<center>"+kaunista(way_option)+"</center>";
   $( "#way_options").slideUp();
 });
 
@@ -180,11 +182,18 @@ $('input:radio[name=obj]').val([obj_option]);
 
 $('input:radio[name=obj]').change(function() {
   obj_option = $('input[name="obj"]:checked').val();
+  document.getElementById("select_object").innerHTML = 
+              "<center>"+kaunista(obj_option)+"</center>";
   $( "#object_options").slideUp();
 });
 
 markers = new Array();  // muistaa max kahden klikatun objektin latlng
 
+
+
+function kaunista(string){  // Ensimm‰inen kirjain muuttuu 
+              return string.charAt(0).toUpperCase()+string.slice(1);
+}
 
 
 function onMapClick(e) { // lis‰‰ objektin
