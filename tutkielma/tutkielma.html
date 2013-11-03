@@ -69,7 +69,7 @@ objectProtos = [{"type":"town","attributes":["vakiluku", "ruoka"]} , {"type":"pe
 
 streetComb = [{"pair":["town", "town"], "attributes":["kestävyys"]}];
 riverComb= [{"pair":["town", "town"], "attributes":["kestävyys"]}];
-connectionComb = [{"pair":["town", "town"], "attributes":[]}, {"pair":["town", "pelto"], "attributes":[]}];
+connectionComb = [{"pair":["town", "town"]}, {"pair":["town", "pelto"]}]; // Näillä ei ominaisuuksia (voi muuttaa)
 
 addRadioButtons();
 makeMarkerbox();
@@ -103,7 +103,7 @@ function getIconByType( type ){
 		   color: 'black'
 	    });
 	
-	   var markers2 = [redMarker, greenMarker, orangeMarker, blueMarker];
+	   var markers2 = [redMarker, greenMarker, orangeMarker, blueMarker];  // Jos muutat, muuta makeMarkerBoxmakeMarkerBox
 	   x=0;
 	   for(var i in objectProtos){  // x riippuu typestä, ja markkeri valitaan sen perusteella.
 		  if(objectProtos[i].type == type){
@@ -176,7 +176,7 @@ function onMapClick(e) { // lisää objektin
 }
 
 function makeMarkerbox(){
-	var imagelist = ['<img src="images/red.png" style="height:50px;width:40px;"> </img>', '<img style="height:50px;width:40px;" src="images/green.png"> </img>', '<img src="images/orange.png" style="height:50px;width:40px;"> </img>', ]
+	var imagelist = ['<img src="images/red.png" style="height:50px;width:40px;"> </img>', '<img style="height:50px;width:40px;" src="images/green.png"> </img>', '<img src="images/orange.png" style="height:50px;width:40px;"> </img>', '<img src="images/darkblue.png" style="height:50px;width:40px;"> </img>']  // Jos muutat, muuta myös getIconByType
       for(var i in objectProtos){
              
              $( "#markerbox" ).append(imagelist[i] + objectProtos[i].type);
@@ -184,7 +184,7 @@ function makeMarkerbox(){
 
 }
 
-function getMarker(obj, selected){ //selected boolean
+function getker(obj, selected){ //selected boolean
 	//Luo ja palauttaa markkerin riippuen objectin tyypistä.
 
 	var marker;
@@ -366,7 +366,7 @@ function addConnection(obj1, obj2){
 		console.log("BugBug bug bug bug")
 	}
 }
-function addPolyline(connection){
+function addPolyline(connection){ // adds a polyline to the connections
 	var color;
 	if(connection.type == "street"){
 		color = "brown";
@@ -397,6 +397,8 @@ function redrawMarkers(){
 	for(var i in objects){
 		updateMarker(objects[i]);
 	}
+}
+function addAttributes(obj, list){
 }
 
 
