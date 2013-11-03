@@ -312,6 +312,10 @@ function getObjectById(id){
 	}
 }
 function addConnection(obj1, obj2){
+	if(connectionExist(obj1, obj2)){
+		console.log("On jo olemassa");
+		return 17;
+	}
 	var valid = false; // onko yhdistystapa objectien välillä oikeaoppinen? default, ei.
 	if(way_option == "street"){
 		for(var i in streetComb){  // tarkistetaan, voidaanko obj1 ja obj 2 yhdistää
@@ -365,6 +369,22 @@ function addConnection(obj1, obj2){
 	else{
 		console.log("BugBug bug bug bug")
 	}
+}
+function connectionExist(obj1, obj2){  // tarkistaa, onko yhteys jo olemassa
+	for(var i in connections){
+		var c = connections[i];
+		if(c.type == way_option){  // type pitää olla sama kuin lisättävän type
+			if(c.pair[0]==obj1.id || c.pair[1]==obj1.id){ // onko obj1 yksi yhdistettävä connectionoliossa?
+				if(c.pair[0]==obj2.id || c.pair[1]==obj2.id){	// onko obj2 yksi yhdistettävä connectionoliossa?
+					return true;
+				}
+			}
+			
+		}
+	}
+	return false; // jos yhteyttä ei löydetty
+
+
 }
 function addPolyline(connection){ // adds a polyline to the connections
 	var color;
