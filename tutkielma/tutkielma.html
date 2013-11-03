@@ -118,7 +118,7 @@ function startSimulation(){
 
 function addRadioButtons(){
 	for(var i in objectProtos){ // lis‰t‰‰n kaikille "type" oma nappula
-			$("#object_options").append('<input type="radio" name="obj" value='+objectProtos[i].type+'>'+objectProtos[i].type+'<br>');
+			$("#object_options").append('<input type="radio" name="obj" value='+objectProtos[i].type+'>'+kaunista(objectProtos[i].type)+'<br>');
 	}
 }
 
