@@ -24,16 +24,17 @@
 <body>
 
 	<div style="height:685px;width:180px;padding:10px;margin-right:20px;float:left;background:rgb(70,140,200);border-radius:5px;">
+	<button class="btn btn-default" id="select_object"> Object options </button>
+	<div id="object_options" style="display:none;">
+	   <!-- Radio inputteja lisätään myöhemmin -->
+	</div>
 	<button class="btn btn-default" id="add_marker">Way options </button>
 	<div id="way_options" style="display:none;">
 	   <input type="radio" name="way" value="street">Street<br>
 	   <input type="radio" name="way" value="river">River<br>
 	   <input type="radio" name="way" value="connection">Connection<br>
 	</div>
-	<button class="btn btn-default" id="select_object"> Object options </button>
-	<div id="object_options" style="display:none;">
-	   <!-- Radio inputteja lisätään myöhemmin -->
-	</div>
+	
 
 
 	Tuplaklikkaa uuden kaupungin luomiseksi. Vaylan luomiseksi klikkaa alkumarkkeria ja loppumarkkeria.  
@@ -145,6 +146,7 @@ $('input:radio[name=way]').val(['street']);
 
 $('input:radio[name=way]').change(function() {
   way_option = $('input[name="way"]:checked').val();
+  document.getElementById("add_marker").innerHTML = "<center>"+kaunista(way_option)+"</center>";
   $( "#way_options").slideUp();
 });
 
@@ -158,6 +160,7 @@ $('input:radio[name=obj]').val([obj_option]);
 
 $('input:radio[name=obj]').change(function() {
   obj_option = $('input[name="obj"]:checked').val();
+  document.getElementById("select_object").innerHTML = "<center>"+kaunista(obj_option)+"</center>";
   $( "#object_options").slideUp();
 });
 
@@ -179,7 +182,7 @@ function makeMarkerbox(){
 	var imagelist = ['<img src="images/red.png" style="height:50px;width:40px;"> </img>', '<img style="height:50px;width:40px;" src="images/green.png"> </img>', '<img src="images/orange.png" style="height:50px;width:40px;"> </img>', '<img src="images/darkblue.png" style="height:50px;width:40px;"> </img>']  // Jos muutat, muuta myös getIconByType
       for(var i in objectProtos){
              
-             $( "#markerbox" ).append(imagelist[i] + objectProtos[i].type);
+             $( "#markerbox" ).append(imagelist[i] + kaunista(objectProtos[i].type));
       }
 
 }
@@ -418,7 +421,8 @@ function redrawMarkers(){
 		updateMarker(objects[i]);
 	}
 }
-function addAttributes(obj, list){
+function kaunista(string){  // Ensimmäinen kirjain muuttuu suureksi
+	return string.charAt(0).toUpperCase()+string.slice(1);
 }
 
 
