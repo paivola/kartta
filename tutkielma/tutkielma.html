@@ -44,7 +44,7 @@
 	<img id = "somalia" src="msomalia.gif" > </img>
 	</div>
     <div id="markerbox" style="height:200px;width:100px;position:absolute;left:600px;top:50px;"> </div>
-	<div id="get_timestep" class="btn"> Get timestep </div>
+	<!-- <div id="get_timestep" class="btn"> Get timestep </div>-->
 
 	<div id = "timeSlider">
 		
@@ -66,70 +66,18 @@
 
 $( document ).ready(function() {
 
-var websocket = new WebSocket('ws://osoite');
-websocket.onopen = function () {
-    websocket.send('Ping'); // Send the message 'Ping' to the server
-};
-
-    // Log errors
-websocket.onerror = function (error) {
-   console.log('WebSocket Error ' + error);
-};
-
-    // Log messages from the server
-websocket.onmessage = function (e) {
-  console.log('Server: ' + e.data);
-};
-
-websocket.onmessage = function (event) {
-  var objectProtos = $.parseJSON( event.data );   // alussa saadaan attribuutit
-
-}
-
-
-objectProtos = [{"type":"town","attributes":["vakiluku", "ruoka"]} , {"type":"pelto", "attributes":["uli"]}];
+objectProtos = [{"type":"town","attributes":["vakiluku", "ruoka"]} , {"type":"field", "attributes":["uli"]}];
 
 streetComb = [{"pair":["town", "town"], "attributes":["kest‰vyys"]}];
 riverComb= [{"pair":["town", "town"], "attributes":["kest‰vyys"]}];
 connectionComb = [{"pair":["town", "town"]}, {"pair":["town", "pelto"]}]; // N‰ill‰ ei ominaisuuksia (voi muuttaa)
 
 addRadioButtons();
-
-
-var objects = [] // objektill ainakin id, marker, latlng, type
-var connections = []; // connectionObjectilla ainakin id, pair, ja type    --- pair on list = [id1, id2] , type street, river tai connection
-var id = 1;
-var popup = false;
-
-var markerdbl = false;
-
-var map = L.map('map').setView([51.5, -0.09], 13);
-//map.dragging = false;
-map.dragging.disable();
-map.touchZoom.disable();
-map.doubleClickZoom.disable();
-map.scrollWheelZoom = false;
-map.minZoom = 9000;
-map.maxZoom = 9000;
-
 makeMarkerbox();
-
-
-function startSimulation(){
-    websocket.send(objects);
-    websocket.send(connections);
-    websocket.onmessage = function (event) {
-        var msg = $.parseJSON( event.data );
-        // tehd‰‰n jotain
-    }
-
-}
-
-
 
 function addRadioButtons(){
 	for(var i in objectProtos){ // lis‰t‰‰n kaikille "type" oma nappula
-			$("#object_options").append('<input type="radio" name="obj" value='+objectProtos[i].type+'>'+objectProtos[i].type+'<br>');
+			$("#object_options").append('<input type="radio" name="obj" value='+objectProtos[i].type+'>'+kaunista(objectProtos[i].type)+'<br>');
 	}
 }
 
@@ -166,6 +114,8 @@ function getIconByType( type ){
 	   return markers2[x];
 
 }
+
+
 
 var objects = [] // objektill ainakin id, marker, latlng, type
 var connections = []; // connectionObjectilla ainakin id, pair, type, ja polyline    --- pair on list = [id1, id2] , type street, river tai 
@@ -218,13 +168,11 @@ markers = new Array();  // muistaa max kahden klikatun objektin latlng
 
 
 
-
 function onMapClick(e) { // lis‰‰ objektin
 	var latlng = e.latlng
 	object = {"type":obj_option, "latlng":latlng, "id":id};
 	object.marker = [getMarker(object, false), false];  // [markerobject, onkoValittu?]
 	objects.push(object);
-
 
 	id+=1;
 	
@@ -246,7 +194,7 @@ function getMarker(obj, selected){ //selected boolean
 	if(selected){
 		marker = L.marker(obj.latlng, options={"title" : id, "icon":getIconByType(obj.type), "opacity":0.6}).addTo(map);
 	}
-	else {
+	else{
 		marker = L.marker(obj.latlng, options={"title" : id, "icon":getIconByType(obj.type)}).addTo(map);
 	}
 	
