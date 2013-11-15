@@ -24,26 +24,26 @@
 <body>
 
 	<div style="height:685px;width:180px;padding:10px;margin-right:20px;float:left;background:rgb(70,140,200);border-radius:5px;">
-	<button class="btn btn-default" id="select_object"> Object options </button>
-	<div id="object_options" style="display:none;">
-	   <!-- Radio inputteja lis‰t‰‰n myˆhemmin -->
-	</div>
 	<button class="btn btn-default" id="add_marker">Way options </button>
 	<div id="way_options" style="display:none;">
 	   <input type="radio" name="way" value="street">Street<br>
 	   <input type="radio" name="way" value="river">River<br>
 	   <input type="radio" name="way" value="connection">Connection<br>
 	</div>
-	
+	<button class="btn btn-default" id="select_object"> Object options </button>
+	<div id="object_options" style="display:none;">
+	   <!-- Radio inputteja lis‰t‰‰n myˆhemmin -->
+	</div>
 
 
 	Tuplaklikkaa uuden kaupungin luomiseksi. Vaylan luomiseksi klikkaa alkumarkkeria ja loppumarkkeria.  
 	</div>
-	<div id="map" >
+	<div id="map" style="background:white;">
 
-	<img id = "somalia" src="msomalia.gif" > </img>
+	<img id = "somalia" src="msomalia.gif" style="float:left;"> </img>
+	<div id="markerbox" style="height:200px;width:100px;float:left;"> </div>
 	</div>
-    <div id="markerbox" style="height:200px;width:100px;position:absolute;left:600px;top:50px;"> </div>
+
 	<div id="get_timestep" class="btn"> Get timestep </div>
 
 	<div id = "timeSlider">
@@ -68,8 +68,8 @@ $( document ).ready(function() {
 
 var websocket = new WebSocket('ws://osoite');
 websocket.onopen = function () {
-    websocket.send('Ping'); // Send the message 'Ping' to the server
-};
+ websocket.send('Ping'); // Send the message 'Ping' to the server
+ };
 
     // Log errors
 websocket.onerror = function (error) {
@@ -86,44 +86,14 @@ websocket.onmessage = function (event) {
 
 }
 
-
 objectProtos = [{"type":"town","attributes":["vakiluku", "ruoka"]} , {"type":"pelto", "attributes":["uli"]}];
 
 streetComb = [{"pair":["town", "town"], "attributes":["kest‰vyys"]}];
 riverComb= [{"pair":["town", "town"], "attributes":["kest‰vyys"]}];
-connectionComb = [{"pair":["town", "town"]}, {"pair":["town", "pelto"]}]; // N‰ill‰ ei ominaisuuksia (voi muuttaa)
+connectionComb = [{"pair":["town", "town"], "attributes":[]}, {"pair":["town", "pelto"], "attributes":[]}];
 
 addRadioButtons();
-
-
-var objects = [] // objektill ainakin id, marker, latlng, type
-var connections = []; // connectionObjectilla ainakin id, pair, ja type    --- pair on list = [id1, id2] , type street, river tai connection
-var id = 1;
-var popup = false;
-
-var markerdbl = false;
-
-var map = L.map('map').setView([51.5, -0.09], 13);
-//map.dragging = false;
-map.dragging.disable();
-map.touchZoom.disable();
-map.doubleClickZoom.disable();
-map.scrollWheelZoom = false;
-map.minZoom = 9000;
-map.maxZoom = 9000;
-
 makeMarkerbox();
-
-
-function startSimulation(){
-    websocket.send(objects);
-    websocket.send(connections);
-    websocket.onmessage = function (event) {
-        var msg = $.parseJSON( event.data );
-        // tehd‰‰n jotain
-    }
-
-}
 
 
 
@@ -156,7 +126,7 @@ function getIconByType( type ){
 		   color: 'black'
 	    });
 	
-	   var markers2 = [redMarker, greenMarker, orangeMarker, blueMarker];  // Jos muutat, muuta makeMarkerBoxmakeMarkerBox
+	   var markers2 = [redMarker, greenMarker, orangeMarker, blueMarker];
 	   x=0;
 	   for(var i in objectProtos){  // x riippuu typest‰, ja markkeri valitaan sen perusteella.
 		  if(objectProtos[i].type == type){
@@ -167,9 +137,10 @@ function getIconByType( type ){
 
 }
 
+
+
 var objects = [] // objektill ainakin id, marker, latlng, type
-var connections = []; // connectionObjectilla ainakin id, pair, type, ja polyline    --- pair on list = [id1, id2] , type street, river tai 
-					
+var connections = []; // connectionObjectilla ainakin id, pair, ja type    --- pair on list = [id1, id2] , type street, river tai connection
 var id = 1;
 var popup = false;
 
@@ -196,7 +167,6 @@ $('input:radio[name=way]').val(['street']);
 
 $('input:radio[name=way]').change(function() {
   way_option = $('input[name="way"]:checked').val();
-  document.getElementById("add_marker").innerHTML = "<center>"+kaunista(way_option)+"</center>";
   $( "#way_options").slideUp();
 });
 
@@ -210,12 +180,10 @@ $('input:radio[name=obj]').val([obj_option]);
 
 $('input:radio[name=obj]').change(function() {
   obj_option = $('input[name="obj"]:checked').val();
-  document.getElementById("select_object").innerHTML = "<center>"+kaunista(obj_option)+"</center>";
   $( "#object_options").slideUp();
 });
 
 markers = new Array();  // muistaa max kahden klikatun objektin latlng
-
 
 
 
@@ -225,16 +193,15 @@ function onMapClick(e) { // lis‰‰ objektin
 	object.marker = [getMarker(object, false), false];  // [markerobject, onkoValittu?]
 	objects.push(object);
 
-
 	id+=1;
 	
 }
 
 function makeMarkerbox(){
-	var imagelist = ['<img src="images/red.png" style="height:50px;width:40px;"> </img>', '<img style="height:50px;width:40px;" src="images/green.png"> </img>', '<img src="images/orange.png" style="height:50px;width:40px;"> </img>', '<img src="images/darkblue.png" style="height:50px;width:40px;"> </img>']  // Jos muutat, muuta myˆs getIconByType
+	var imagelist = ['<img src="images/red.png" style="height:50px;width:40px;"> </img>', '<img style="height:50px;width:40px;" src="images/green.png"> </img>', '<img src="images/orange.png" style="height:50px;width:40px;"> </img>', ]
       for(var i in objectProtos){
-             
-             $( "#markerbox" ).append(imagelist[i] + kaunista(objectProtos[i].type));
+
+             $( "#markerbox" ).append(imagelist[i] + objectProtos[i].type);
       }
 
 }
@@ -246,7 +213,7 @@ function getMarker(obj, selected){ //selected boolean
 	if(selected){
 		marker = L.marker(obj.latlng, options={"title" : id, "icon":getIconByType(obj.type), "opacity":0.6}).addTo(map);
 	}
-	else {
+	else{
 		marker = L.marker(obj.latlng, options={"title" : id, "icon":getIconByType(obj.type)}).addTo(map);
 	}
 	
@@ -260,6 +227,7 @@ var obj1;
 var obj2;
 function onMarkerClick(a) {
 	var latlng = a.latlng;
+	console.log(markers);
 	this //marker
 	if(popup){
 		popup = false;
@@ -302,14 +270,17 @@ function onMarkerClick(a) {
 
 function onMarkerdblClick(a){
 	markerdbl = true;
+	console.log(a.latlng);
 	var modMarker = this;
 	this.bindPopup("<b>Delete?</b><br/><button class='deleteButton'>Yes</button>").openPopup();
 	popup = true;
 	$(".deleteButton").click( function(){
 		objIndex = getObjectIndexBylatlng(a.latlng);
+		console.log(objIndex);
 		map.removeLayer(objects[objIndex].marker[0]);
 		removeObject(objIndex);
 		markers = new Array();
+		updateMap();
 	
     });
 
@@ -320,20 +291,40 @@ map.on('dblclick', onMapClick);
 
 
 
+function redrawMarkers(){
+	for(var i in objects){
+		updateMarker(objects[i]);
+	}
+}
+function redrawConnections(){
+	console.log("Ei valmis!");
+	var street = new L.Polyline(markers, {
+    color: 'black',
+    weight: 3,
+    opacity: 0.8,
+    smoothFactor: 1
+
+    });
+    var river = new L.Polyline(markers, {
+    color: 'blue',
+    weight: 3,
+    opacity: 0.8,
+    smoothFactor: 1
+
+    });
+	
+}
+
+
+function updateMap(){
+	redrawMarkers();
+	redrawConnections();
+}
+
+
 
 function removeObject(index){
-	var x = connections.length;
-	while(x>0){
-		x-=1;
-		var pair = connections[x].pair
-		if(pair[0] == objects[index].id || pair[1] == objects[index].id){
-			map.removeLayer(connections[x].polyline);
-			connections.splice(x, 1);
-		}
-	
-	}
-	
-	
+	// remove connections----------------------------------------------------------------------------------------------------------------------------------
 	objects.splice(index, 1);
 }
 function updateMarker(obj){
@@ -354,23 +345,14 @@ function updateMarker(obj){
 
 function getObjectIndexBylatlng(latlng){
 	for(var i in objects){
+		console.log(objects);
 		if(latlng == objects[i].latlng){
 			return i;
 		}
 	}
-}
-function getObjectById(id){
-	for(var i in objects){
-		if(objects[i].id == id){
-			return objects[i];
-		}
-	}
+
 }
 function addConnection(obj1, obj2){
-	if(connectionExist(obj1, obj2)){
-		console.log("On jo olemassa");
-		return 17;
-	}
 	var valid = false; // onko yhdistystapa objectien v‰lill‰ oikeaoppinen? default, ei.
 	if(way_option == "street"){
 		for(var i in streetComb){  // tarkistetaan, voidaanko obj1 ja obj 2 yhdist‰‰
@@ -383,98 +365,20 @@ function addConnection(obj1, obj2){
 			}
 		}
 		if(valid){
-			connection = {"type":"street", "pair":[obj1.id, obj2.id]};
-			addPolyline(connection);
-			connections.push(connection);
+			connection = {"type":"street", "pair":[obj1.id, obj2.id]}
+		
 		}
 	
 	}
 	else if(way_option == "river"){
-		for(var i in riverComb){  // tarkistetaan, voidaanko obj1 ja obj 2 yhdist‰‰
-			pair = riverComb[i].pair;
-			if(obj1.type == pair[0] || obj1.type == pair[1]){
-				if(obj2.type == pair[0] || obj2.type == pair[1]){
-					valid = true;
-					break;
-				}
-			}
-		}
-		if(valid){
-			connection = {"type":"river", "pair":[obj1.id, obj2.id]};
-			addPolyline(connection);
-			connections.push(connection);
-		}
 	}
 	else if(way_option == "connection"){
-		for(var i in connectionComb){  // tarkistetaan, voidaanko obj1 ja obj 2 yhdist‰‰
-			pair = connectionComb[i].pair;
-			if(obj1.type == pair[0] || obj1.type == pair[1]){
-				if(obj2.type == pair[0] || obj2.type == pair[1]){
-					valid = true;
-					break;
-				}
-			}
-		}
-		if(valid){
-			connection = {"type":"connection", "pair":[obj1.id, obj2.id]};
-			addPolyline(connection);
-			connections.push(connection);
-		}
 	}
 	else{
 		console.log("BugBug bug bug bug")
 	}
-}
-function connectionExist(obj1, obj2){  // tarkistaa, onko yhteys jo olemassa
-	for(var i in connections){
-		var c = connections[i];
-		if(c.type == way_option){  // type pit‰‰ olla sama kuin lis‰tt‰v‰n type
-			if(c.pair[0]==obj1.id || c.pair[1]==obj1.id){ // onko obj1 yksi yhdistett‰v‰ connectionoliossa?
-				if(c.pair[0]==obj2.id || c.pair[1]==obj2.id){	// onko obj2 yksi yhdistett‰v‰ connectionoliossa?
-					return true;
-				}
-			}
-			
-		}
-	}
-	return false; // jos yhteytt‰ ei lˆydetty
-
-
-}
-function addPolyline(connection){ // adds a polyline to the connections
-	var color;
-	if(connection.type == "street"){
-		color = "brown";
-	}
-	else if(connection.type == "river"){
-		color = "blue";
-	}
-	else if(connection.type == "connection"){
-		color = "grey"
-	}
-	else{
-		console.log("Bug.");
-	}
-	var id1 = connection.pair[0];
-	var id2 = connection.pair[1];
 	
-	var line = new L.Polyline([getObjectById(id1).latlng, getObjectById(id2).latlng], {
-	color: color,
-	weight: 3,
-	opacity: 0.8,
-	smoothFactor: 1
-	});
-	
-	connection.polyline = line;
-	line.addTo(map);
-}
-function redrawMarkers(){
-	for(var i in objects){
-		updateMarker(objects[i]);
-	}
-}
-function kaunista(string){  // Ensimm‰inen kirjain muuttuu suureksi
-	return string.charAt(0).toUpperCase()+string.slice(1);
+
 }
 
 
