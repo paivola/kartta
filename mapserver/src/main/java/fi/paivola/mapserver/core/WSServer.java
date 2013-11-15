@@ -1,4 +1,4 @@
-package fi.paivola.mapserver;
+package fi.paivola.mapserver.core;
 
 import java.net.InetSocketAddress;
 import java.net.UnknownHostException;

@@ -1,13 +1,12 @@
 package fi.paivola.mapserver;
 
-/**
- * Hello world!
- *
- */
+import fi.paivola.mapserver.core.GameManager;
+
 public class App 
 {
     public static void main( String[] args )
     {
         System.out.println( "Hello World!" );
+        GameManager gm = new GameManager(10);
     }
 }
