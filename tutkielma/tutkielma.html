@@ -66,6 +66,25 @@
 
 $( document ).ready(function() {
 
+var websocket = new WebSocket('ws://osoite');
+
+websocket.onopen = function () {
+    websocket.send('Ping'); // Send the message 'Ping' to the server
+};
+
+    // Log errors
+websocket.onerror = function (error) {
+   console.log('WebSocket Error ' + error);
+};
+
+websocket.onmessage = function (event) {
+   var objectProtos = $.parseJSON( event.data );   // alussa saadaan attribuutit
+   websocket.onmessage = function (e) {
+     console.log('Server: ' + e.data);
+   };
+
+}
+
 objectProtos = [{"type":"town","attributes":["vakiluku", "ruoka"]} , {"type":"field", "attributes":["uli"]}];
 
 streetComb = [{"pair":["town", "town"], "attributes":["kestävyys"]}];
