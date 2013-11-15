@@ -1,6 +1,8 @@
 package fi.paivola.mapserver.core;
 
 import java.io.IOException;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -14,13 +16,16 @@ public class GameManager {
     public long tick_current;
     private Map<String, Object> models;
     private final List<DataFrame> frames;
+    private final List<Model> active_models;
     private SettingsParser sp;
+    public long current_id;
     
     public GameManager(long tick_amount) {
         this.tick_amount = tick_amount;
         this.tick_current = 0;
-        //this.models = new HashMap();
         this.frames = new ArrayList<>();
+        this.active_models = new ArrayList<>();
+        this.current_id = 0;
         
         try {
             this.sp = new SettingsParser();
@@ -38,16 +43,25 @@ public class GameManager {
             frames.add( new DataFrame(i) );
         }
     }
-    
-    public int addModel(String id, Class clas) {
-        if(   this.models.put(id, clas) == null) {
-            return 0;
+
+    public int createModel(String type) {
+        Class cls;
+        cls = (Class) models.get(type);
+        if(cls == null) {
+            return 1;
         }
-        return 1;
-    }
-    
-    public int createModel(String id) {
-        
+        try {
+            Constructor<Model> c;
+            c = cls.getDeclaredConstructor(long.class);
+            c.setAccessible(true);
+            try {
+                this.active_models.add(c.newInstance(this.current_id++));
+            } catch (    InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException ex) {
+                Logger.getLogger(GameManager.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        } catch (NoSuchMethodException | SecurityException ex) {
+            Logger.getLogger(GameManager.class.getName()).log(Level.SEVERE, null, ex);
+        }
         return 0;
     }
     

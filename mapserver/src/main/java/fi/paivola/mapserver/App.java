@@ -8,5 +8,6 @@ public class App
     {
         System.out.println( "Hello World!" );
         GameManager gm = new GameManager(10);
+        gm.createModel("asd");
     }
 }

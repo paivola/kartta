@@ -6,16 +6,18 @@ import java.util.Map;
 public class DataFrame {
     
     public long index;
-    private Map<String, Object> data;
+    private final Map<String, Object> data;
     
     public DataFrame(long index) {
         this.index = index;
         this.data = new HashMap();
     }
     
-    public int saveEvent(Model model) {
-        
-        return 0;
+    public int saveEvent(Model model, String field, double data) {
+        if(this.data.put(model.id+"-"+field, data) == null) {
+            return 0;
+        }
+        return 1;
     }
     
 }
