@@ -12,15 +12,15 @@ import org.json.simple.parser.ParseException;
 
 public class GameManager {
     
-    public long tick_amount;
-    public long tick_current;
+    public int tick_amount;
+    public int tick_current;
     private Map<String, Object> models;
     private final List<DataFrame> frames;
     private final List<Model> active_models;
     private SettingsParser sp;
     public long current_id;
     
-    public GameManager(long tick_amount) {
+    public GameManager(int tick_amount) {
         this.tick_amount = tick_amount;
         this.tick_current = 0;
         this.frames = new ArrayList<>();
@@ -66,6 +66,14 @@ public class GameManager {
     }
     
     public int step() {
+        
+        if(this.tick_current > 0) {
+            for(int i = 0; i < this.active_models.size(); i++) {
+                this.active_models.get(i).onTick(this.frames.get(this.tick_current));
+            }
+        }else{ //step 0 needs to use default values
+            
+        }
         
         return 0;
     }

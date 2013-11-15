@@ -13,11 +13,13 @@ public class DataFrame {
         this.data = new HashMap();
     }
     
-    public int saveEvent(Model model, String field, double data) {
+    public int saveData(Model model, String field, long data) {
         if(this.data.put(model.id+"-"+field, data) == null) {
             return 0;
         }
         return 1;
     }
+    
+    
     
 }

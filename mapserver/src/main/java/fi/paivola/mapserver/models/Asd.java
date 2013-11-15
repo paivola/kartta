@@ -5,17 +5,19 @@ import fi.paivola.mapserver.core.MapObjectSetting;
 import fi.paivola.mapserver.core.Model;
 
 public class Asd extends Model {
-
-    public static final MapObjectSetting[] settings = {
-        new MapObjectSetting("l", 0, 2, 1)
-    };
     
     public static final String[] tags = {
         "asd", "point"
     };
     
-    public static final String[] allowedTags = {
+    public static final String[] allowedConnections = {
         "asd_connection"
+    };
+    
+    public static final MapObjectSetting[] settings = {
+        new MapObjectSetting("conn1").setAsConnection(allowedConnections),
+        new MapObjectSetting("conn2").setAsConnection(allowedConnections),
+        new MapObjectSetting("volume").setAsInteger(0, 10, 5)
     };
     
     public static final Type type = Type.POINT;
@@ -41,7 +43,7 @@ public class Asd extends Model {
 
     @Override
     public String[] getAllowedTags() {
-        return allowedTags;
+        return allowedConnections;
     }
     
     @Override
