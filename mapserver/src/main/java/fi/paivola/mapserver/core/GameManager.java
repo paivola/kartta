@@ -65,15 +65,36 @@ public class GameManager {
         return 0;
     }
     
+    public int populateDefaults(Model m, DataFrame df) {
+        
+        //this.sp.
+        
+        return 0;
+    }
+    
+    public int stepTrough() {
+        
+        while(this.tick_current < this.tick_amount) {
+            this.step();
+        }
+        
+        return 0;
+    }
+    
     public int step() {
         
+        DataFrame df = this.frames.get(this.tick_current);
         if(this.tick_current > 0) {
             for(int i = 0; i < this.active_models.size(); i++) {
-                this.active_models.get(i).onTick(this.frames.get(this.tick_current));
+                this.active_models.get(i).onTick(df);
             }
         }else{ //step 0 needs to use default values
-            
+            for(int i = 0; i < this.active_models.size(); i++) {
+                this.populateDefaults(this.active_models.get(i), df);
+            }
         }
+        
+        this.tick_current++;
         
         return 0;
     }
