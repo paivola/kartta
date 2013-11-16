@@ -49,8 +49,15 @@
 	<div id = "timeSlider">
 		
 		<p>
+		  <div id="max_years">Years amount:  </div>
 		  <label for="amount"></label>
-		  <input type="text" id="amount" style="border: 0; color: #f6931f; font-weight: bold;" />
+		  <div type="text" id="amount" style="border: 0; color: #f6931f; font-weight: bold;"></div>
+
+		  <div>
+		  <div class="btn btn-primary" id="change_years" >Change years</div>
+		  <div style="display:none;padding:5px;" id="change_years_div">Change years: <input id = "change_years_input">    </input><div id="change_years_submit" class="btn btn-mini btn-primary">submit</div> </div>
+		  </div>
+
 		</p>
 		<div id="slider-range-max"></div>
 		
@@ -458,10 +465,29 @@ function sliderValueToJson( sliderValue ){
 
 
 // slider code
+
 var years = 4;
 var simulationsPerYear = 26;
+makeSlider();
 
-$(function() {
+$( "#max_years" ).html($( "#max_years" ).html() + years);
+
+
+$( "#change_years" ).click(function() {
+	$( "#change_years_div" ).slideToggle();
+});
+
+$( "#change_years_submit" ).click(function() {
+	years = $( "#change_years_input" ).val();
+	$( "#max_years" ).html('Years amount: ' + years);
+	makeSlider();
+	$( "#change_years_div" ).slideUp();
+});
+
+
+
+function makeSlider(){
+    $(function() {
     $( "#slider-range-max" ).slider({
       range: "max",
       min: 0,
@@ -471,11 +497,13 @@ $(function() {
 		var y = Math.floor(ui.value/simulationsPerYear);
 		var w = (ui.value%simulationsPerYear)*(52/simulationsPerYear);  // KATSO TÄMÄÄÄ!!!
 		var string = "Years: "+ y+" Weeks: "+w;
-        $( "#amount" ).val(string);
+        $( "#amount" ).html(string);
       }
     });
-    $( "#amount" ).val( "Years: 0 Weeks: 0" );
-  });
+    $( "#amount" ).html( "Years: 0 Weeks: 0" );
+    });
+
+}
  
 function getSliderValue(){
 	return $('#slider-range-max').slider("option", "value");
