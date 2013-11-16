@@ -49,7 +49,7 @@
 	<div id = "timeSlider">
 		
 		<p>
-		  <div id="max_years">Years amount:  </div>
+		  <div id="max_years">Max years:  </div>
 		  <label for="amount"></label>
 		  <div type="text" id="amount" style="border: 0; color: #f6931f; font-weight: bold;"></div>
 
@@ -479,7 +479,7 @@ $( "#change_years" ).click(function() {
 
 $( "#change_years_submit" ).click(function() {
 	years = $( "#change_years_input" ).val();
-	$( "#max_years" ).html('Years amount: ' + years);
+	$( "#max_years" ).html('Max years ' + years);
 	makeSlider();
 	$( "#change_years_div" ).slideUp();
 });
